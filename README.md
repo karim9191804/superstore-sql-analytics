@@ -4,7 +4,7 @@ Pipeline analytique complet en **SQL avancé** (dbt + DuckDB) sur les ventes d'u
 
 > Objectif du projet : démontrer une maîtrise pratique du SQL — CTE, window functions, agrégations, tests de qualité de données — sur un cas métier réaliste (analyse de ventes retail).
 
-**[🔗 Voir le dashboard en ligne](#)** *(lien à ajouter après déploiement — voir section [Déploiement](#déployer-le-dashboard))*
+**[🔗 Voir le dashboard en ligne](https://superstore-sql-analytics-ua2wgmwcrhhd3ezu6nzaaw.streamlit.app/)**
 
 ![Dashboard](docs/screenshot-dashboard.png)
 
