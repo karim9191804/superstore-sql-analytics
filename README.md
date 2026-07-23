@@ -1,5 +1,7 @@
 # 📊 Superstore Sales Analytics — SQL & dbt
 
+![dbt build](https://github.com/karim9191804/superstore-sql-analytics/actions/workflows/dbt-build.yml/badge.svg)
+
 Pipeline analytique complet en **SQL avancé** (dbt + DuckDB) sur les ventes d'un magasin (dataset [Superstore](https://www.kaggle.com/datasets), 9 800 commandes, 2015-2018), avec un **dashboard web interactif** en bout de chaîne.
 
 > Objectif du projet : démontrer une maîtrise pratique du SQL — CTE, window functions, agrégations, tests de qualité de données — sur un cas métier réaliste (analyse de ventes retail).
@@ -7,6 +9,16 @@ Pipeline analytique complet en **SQL avancé** (dbt + DuckDB) sur les ventes d'u
 **[🔗 Voir le dashboard en ligne](https://superstore-sql-analytics-ua2wgmwcrhhd3ezu6nzaaw.streamlit.app/)**
 
 ![Dashboard](docs/screenshot-dashboard.png)
+
+## Questions métier résolues
+
+| Question métier | Réponse (modèle) |
+|---|---|
+| Quelle est la tendance des ventes mois par mois, et à quel rythme l'entreprise croît-elle ? | [`mart_monthly_sales`](dbt/models/marts/mart_monthly_sales.sql) — cumul et % de croissance MoM |
+| Quelle catégorie de produits performe le mieux dans chaque région, et quel poids représente-t-elle ? | [`mart_region_category`](dbt/models/marts/mart_region_category.sql) — classement par région |
+| Quels sont mes produits les plus vendus, catégorie par catégorie ? | [`mart_top_products`](dbt/models/marts/mart_top_products.sql) — top 10 par catégorie |
+| Quels clients sont mes meilleurs (à choyer) et lesquels risquent de partir ? | [`mart_customer_summary`](dbt/models/marts/mart_customer_summary.sql) — segmentation RFM |
+| Quel mode d'expédition livre le plus vite, et où ? | [`mart_shipping_performance`](dbt/models/marts/mart_shipping_performance.sql) — délai moyen par mode/région |
 
 ## Ce que ce projet démontre
 
