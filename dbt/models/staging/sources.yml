@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: raw
+    meta:
+      external_location: "../data/{name}.csv"
+    tables:
+      - name: superstore
+        description: "Données brutes de ventes Superstore (export CSV Kaggle), une ligne par ligne de commande."

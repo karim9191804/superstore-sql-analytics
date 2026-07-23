@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+dbt/superstore.duckdb
+dbt/superstore.duckdb.wal
+dbt/.user.yml
+
+.streamlit/secrets.toml
+streamlit_test.log

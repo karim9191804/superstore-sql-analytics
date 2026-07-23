@@ -1,0 +1,47 @@
+version: 2
+
+models:
+  - name: mart_monthly_sales
+    description: "Ventes mensuelles agrégées avec cumul (running total) et croissance mois sur mois."
+    columns:
+      - name: month
+        tests:
+          - unique
+          - not_null
+
+  - name: mart_region_category
+    description: "Ventes par région et catégorie, avec classement (RANK) de chaque catégorie au sein de sa région."
+    columns:
+      - name: region
+        tests:
+          - not_null
+      - name: category
+        tests:
+          - not_null
+
+  - name: mart_top_products
+    description: "Top 10 produits par catégorie selon les ventes totales (ROW_NUMBER partitionné)."
+    columns:
+      - name: rank_in_category
+        tests:
+          - not_null
+
+  - name: mart_customer_summary
+    description: "Synthèse RFM (récence / fréquence / montant) par client avec segmentation."
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_segment
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["Champion", "Client fidèle", "À risque", "Standard"]
+
+  - name: mart_shipping_performance
+    description: "Délai de livraison moyen par mode d'expédition et région."
+    columns:
+      - name: ship_mode
+        tests:
+          - not_null

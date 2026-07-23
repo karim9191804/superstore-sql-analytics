@@ -1,0 +1,7 @@
+superstore_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: 'superstore.duckdb'
+      threads: 4

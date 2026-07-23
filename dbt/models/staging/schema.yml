@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: stg_superstore
+    description: "Table de staging : ligne de commande Superstore nettoyée et dédoublonnée (types castés, dates parsées)."
+    columns:
+      - name: row_id
+        description: "Identifiant unique de la ligne de commande (clé primaire source)."
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        tests:
+          - not_null
+      - name: sales
+        tests:
+          - not_null
+      - name: ship_mode
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["Second Class", "Standard Class", "First Class", "Same Day"]
+      - name: region
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["South", "West", "Central", "East"]
+      - name: segment
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["Consumer", "Corporate", "Home Office"]
