@@ -47,6 +47,56 @@ superstore.csv (source brute)
 
 **`fact_sales`** (grain = une ligne produit dans une commande) référence 5 dimensions par clé étrangère :
 
+```mermaid
+erDiagram
+    FACT_SALES {
+        int row_id PK
+        varchar order_id
+        varchar customer_id FK
+        varchar product_id FK
+        int location_id FK
+        varchar ship_mode FK
+        date order_date FK
+        date ship_date FK
+        double sales
+    }
+    DIM_CUSTOMER {
+        varchar customer_id PK
+        varchar customer_name
+        varchar segment
+    }
+    DIM_PRODUCT {
+        varchar product_id PK
+        varchar product_name
+        varchar category
+        varchar sub_category
+    }
+    DIM_LOCATION {
+        int location_id PK
+        varchar city
+        varchar state
+        varchar postal_code
+        varchar region
+        varchar country
+    }
+    DIM_SHIP_MODE {
+        varchar ship_mode PK
+    }
+    DIM_DATE {
+        date date_day PK
+        int year
+        int quarter
+        int month
+        int iso_week
+    }
+
+    FACT_SALES }o--|| DIM_CUSTOMER : customer_id
+    FACT_SALES }o--|| DIM_PRODUCT : product_id
+    FACT_SALES }o--|| DIM_LOCATION : location_id
+    FACT_SALES }o--|| DIM_SHIP_MODE : ship_mode
+    FACT_SALES }o--|| DIM_DATE : "order_date / ship_date"
+```
+
 | Dimension | Clé primaire | Contenu |
 |---|---|---|
 | [`dim_customer`](dbt/models/warehouse/dim_customer.sql) | `customer_id` | nom, segment |
@@ -56,6 +106,14 @@ superstore.csv (source brute)
 | [`dim_date`](dbt/models/warehouse/dim_date.sql) | `date_day` | calendrier complet (année, trimestre, mois, semaine ISO) |
 
 Chaque FK de `fact_sales` est couverte par un test dbt `relationships` (intégrité référentielle vérifiée à chaque `dbt build`).
+
+**Pour explorer interactivement** : dbt génère aussi un graphe de dépendances (lineage) entre tous les modèles :
+```bash
+cd dbt
+dbt docs generate --profiles-dir . --project-dir .
+dbt docs serve --profiles-dir . --project-dir .
+```
+Ça ouvre une doc locale (`localhost:8080`) avec le DAG cliquable staging → warehouse → marts, et le détail de chaque colonne/test.
 
 ## Modèles dbt
 
