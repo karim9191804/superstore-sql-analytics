@@ -72,7 +72,11 @@ def get_connection():
 def load_filter_bounds():
     con = get_connection()
     bounds = con.execute(
-        "select min(order_date), max(order_date) from fact_sales"
+        """
+        select min(d.date_day), max(d.date_day)
+        from fact_sales f
+        join dim_date d on f.order_date_key = d.date_key
+        """
     ).fetchone()
     regions = [r[0] for r in con.execute(
         "select distinct region from dim_location order by 1"
@@ -86,14 +90,15 @@ def load_filter_bounds():
 @st.cache_data
 def query_filtered(start_date, end_date, regions, categories):
     con = get_connection()
-    # fact_sales joined to its dimensions via FK -> PK, star-schema style
+    # fact_sales joined to its dimensions via integer surrogate FK -> PK, star-schema style
     base_from = """
         from fact_sales f
-        join dim_location l on f.location_id = l.location_id
-        join dim_product p on f.product_id = p.product_id
+        join dim_location l on f.location_key = l.location_key
+        join dim_product p on f.product_key = p.product_key
+        join dim_date d on f.order_date_key = d.date_key
     """
     where = """
-        where f.order_date between ? and ?
+        where d.date_day between ? and ?
         and l.region in ({})
         and p.category in ({})
     """.format(
@@ -107,7 +112,7 @@ def query_filtered(start_date, end_date, regions, categories):
         select
             sum(f.sales) as total_sales,
             count(distinct f.order_id) as total_orders,
-            count(distinct f.customer_id) as total_customers,
+            count(distinct f.customer_key) as total_customers,
             sum(f.sales) / nullif(count(distinct f.order_id), 0) as avg_order_value
         {base_from}
         {where}
@@ -118,7 +123,7 @@ def query_filtered(start_date, end_date, regions, categories):
     monthly = con.execute(
         f"""
         with monthly as (
-            select date_trunc('month', f.order_date)::date as month, sum(f.sales) as total_sales
+            select date_trunc('month', d.date_day)::date as month, sum(f.sales) as total_sales
             {base_from}
             {where}
             group by 1

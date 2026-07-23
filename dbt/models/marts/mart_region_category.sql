@@ -4,10 +4,10 @@ with agg as (
         p.category,
         sum(f.sales) as total_sales,
         count(distinct f.order_id) as total_orders,
-        count(distinct f.customer_id) as total_customers
+        count(distinct f.customer_key) as total_customers
     from {{ ref('fact_sales') }} f
-    join {{ ref('dim_location') }} l on f.location_id = l.location_id
-    join {{ ref('dim_product') }} p on f.product_id = p.product_id
+    join {{ ref('dim_location') }} l on f.location_key = l.location_key
+    join {{ ref('dim_product') }} p on f.product_key = p.product_key
     group by 1, 2
 )
 

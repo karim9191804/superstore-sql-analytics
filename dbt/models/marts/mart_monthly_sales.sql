@@ -4,7 +4,7 @@ with monthly as (
         sum(f.sales) as total_sales,
         count(distinct f.order_id) as total_orders
     from {{ ref('fact_sales') }} f
-    join {{ ref('dim_date') }} d on f.order_date = d.date_day
+    join {{ ref('dim_date') }} d on f.order_date_key = d.date_key
     group by 1
 )
 

@@ -9,7 +9,7 @@ with distinct_locations as (
 )
 
 select
-    row_number() over (order by country, region, state, city, postal_code) as location_id,
+    row_number() over (order by country, region, state, city, postal_code) as location_key,
     city,
     state,
     postal_code,

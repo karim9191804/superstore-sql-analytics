@@ -1,13 +1,14 @@
 with orders as (
     select
-        f.customer_id,
+        c.customer_id,
         c.customer_name,
         c.segment,
         f.order_id,
-        f.order_date,
+        od.date_day as order_date,
         f.sales
     from {{ ref('fact_sales') }} f
-    join {{ ref('dim_customer') }} c on f.customer_id = c.customer_id
+    join {{ ref('dim_customer') }} c on f.customer_key = c.customer_key
+    join {{ ref('dim_date') }} od on f.order_date_key = od.date_key
 ),
 
 customer_orders as (

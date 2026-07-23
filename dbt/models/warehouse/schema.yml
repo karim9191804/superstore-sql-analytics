@@ -2,94 +2,106 @@ version: 2
 
 models:
   - name: dim_customer
-    description: "Dimension client (une ligne par customer_id)."
+    description: "Dimension client. Clé de substitution entière `customer_key` ; `customer_id` (ex: CG-12520) conservé comme clé métier/attribut."
     columns:
+      - name: customer_key
+        tests:
+          - unique
+          - not_null
       - name: customer_id
         tests:
           - unique
           - not_null
 
   - name: dim_product
-    description: "Dimension produit (une ligne par product_id)."
+    description: "Dimension produit. Clé de substitution entière `product_key` ; `product_id` conservé comme clé métier/attribut."
     columns:
+      - name: product_key
+        tests:
+          - unique
+          - not_null
       - name: product_id
         tests:
           - unique
           - not_null
 
   - name: dim_location
-    description: "Dimension géographique, clé de substitution générée (pas de clé naturelle dans la source)."
+    description: "Dimension géographique, clé de substitution entière `location_key` (pas de clé naturelle dans la source)."
     columns:
-      - name: location_id
+      - name: location_key
         tests:
           - unique
           - not_null
 
   - name: dim_ship_mode
-    description: "Dimension mode d'expédition."
+    description: "Dimension mode d'expédition. Clé de substitution entière `ship_mode_key` ; `ship_mode` conservé comme attribut."
     columns:
-      - name: ship_mode
+      - name: ship_mode_key
         tests:
           - unique
           - not_null
 
   - name: dim_date
-    description: "Dimension calendaire, une ligne par jour couvrant la période des commandes/livraisons."
+    description: "Dimension calendaire. Clé de substitution entière `date_key` au format YYYYMMDD (pattern Kimball standard) ; `date_day` conservé comme attribut de type date."
     columns:
+      - name: date_key
+        tests:
+          - unique
+          - not_null
       - name: date_day
         tests:
           - unique
           - not_null
 
   - name: fact_sales
-    description: "Table de faits : une ligne par ligne de commande (grain = row_id), avec les clés étrangères vers chaque dimension."
+    description: "Table de faits : une ligne par ligne de commande (grain = row_id), toutes les FK sont des clés de substitution entières."
     columns:
       - name: row_id
         tests:
           - unique
           - not_null
-      - name: customer_id
+      - name: customer_key
         tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_customer')
-                field: customer_id
-      - name: product_id
+                field: customer_key
+      - name: product_key
         tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_product')
-                field: product_id
-      - name: location_id
+                field: product_key
+      - name: location_key
         tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_location')
-                field: location_id
-      - name: ship_mode
+                field: location_key
+      - name: ship_mode_key
         tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_ship_mode')
-                field: ship_mode
-      - name: order_date
+                field: ship_mode_key
+      - name: order_date_key
         tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_date')
-                field: date_day
-      - name: ship_date
+                field: date_key
+      - name: ship_date_key
         tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_date')
-                field: date_day
+                field: date_key
       - name: sales
         tests:
           - not_null

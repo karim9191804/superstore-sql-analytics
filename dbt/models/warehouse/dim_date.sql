@@ -11,6 +11,7 @@ spine as (
 )
 
 select
+    cast(strftime(date_day, '%Y%m%d') as integer) as date_key,
     date_day,
     extract(year from date_day) as year,
     extract(quarter from date_day) as quarter,

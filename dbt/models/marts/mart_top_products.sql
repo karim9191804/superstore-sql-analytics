@@ -7,7 +7,7 @@ with product_sales as (
         sum(f.sales) as total_sales,
         count(distinct f.order_id) as total_orders
     from {{ ref('fact_sales') }} f
-    join {{ ref('dim_product') }} p on f.product_id = p.product_id
+    join {{ ref('dim_product') }} p on f.product_key = p.product_key
     group by 1, 2, 3, 4
 )
 

@@ -45,34 +45,36 @@ superstore.csv (source brute)
 
 ## Schéma en étoile
 
-**`fact_sales`** (grain = une ligne produit dans une commande) référence 5 dimensions par clé étrangère :
+**`fact_sales`** (grain = une ligne produit dans une commande) référence 5 dimensions par **clé de substitution entière** (surrogate key) — plus rapide et plus compacte à joindre qu'une clé métier texte, et découplée de l'identifiant source :
 
 ```mermaid
 erDiagram
     FACT_SALES {
         int row_id PK
         varchar order_id
-        varchar customer_id FK
-        varchar product_id FK
-        int location_id FK
-        varchar ship_mode FK
-        date order_date FK
-        date ship_date FK
+        int customer_key FK
+        int product_key FK
+        int location_key FK
+        int ship_mode_key FK
+        int order_date_key FK
+        int ship_date_key FK
         double sales
     }
     DIM_CUSTOMER {
-        varchar customer_id PK
+        int customer_key PK
+        varchar customer_id "clé métier"
         varchar customer_name
         varchar segment
     }
     DIM_PRODUCT {
-        varchar product_id PK
+        int product_key PK
+        varchar product_id "clé métier"
         varchar product_name
         varchar category
         varchar sub_category
     }
     DIM_LOCATION {
-        int location_id PK
+        int location_key PK
         varchar city
         varchar state
         varchar postal_code
@@ -80,32 +82,38 @@ erDiagram
         varchar country
     }
     DIM_SHIP_MODE {
-        varchar ship_mode PK
+        int ship_mode_key PK
+        varchar ship_mode
     }
     DIM_DATE {
-        date date_day PK
+        int date_key PK "format YYYYMMDD"
+        date date_day
         int year
         int quarter
         int month
         int iso_week
     }
 
-    FACT_SALES }o--|| DIM_CUSTOMER : customer_id
-    FACT_SALES }o--|| DIM_PRODUCT : product_id
-    FACT_SALES }o--|| DIM_LOCATION : location_id
-    FACT_SALES }o--|| DIM_SHIP_MODE : ship_mode
-    FACT_SALES }o--|| DIM_DATE : "order_date / ship_date"
+    FACT_SALES }o--|| DIM_CUSTOMER : customer_key
+    FACT_SALES }o--|| DIM_PRODUCT : product_key
+    FACT_SALES }o--|| DIM_LOCATION : location_key
+    FACT_SALES }o--|| DIM_SHIP_MODE : ship_mode_key
+    FACT_SALES }o--|| DIM_DATE : "order_date_key / ship_date_key"
 ```
 
-| Dimension | Clé primaire | Contenu |
-|---|---|---|
-| [`dim_customer`](dbt/models/warehouse/dim_customer.sql) | `customer_id` | nom, segment |
-| [`dim_product`](dbt/models/warehouse/dim_product.sql) | `product_id` | nom, catégorie, sous-catégorie |
-| [`dim_location`](dbt/models/warehouse/dim_location.sql) | `location_id` (clé de substitution) | ville, état, code postal, région, pays |
-| [`dim_ship_mode`](dbt/models/warehouse/dim_ship_mode.sql) | `ship_mode` | mode d'expédition |
-| [`dim_date`](dbt/models/warehouse/dim_date.sql) | `date_day` | calendrier complet (année, trimestre, mois, semaine ISO) |
+| Dimension | Clé primaire | Clé métier conservée | Contenu |
+|---|---|---|---|
+| [`dim_customer`](dbt/models/warehouse/dim_customer.sql) | `customer_key` (int) | `customer_id` (ex: `CG-12520`) | nom, segment |
+| [`dim_product`](dbt/models/warehouse/dim_product.sql) | `product_key` (int) | `product_id` (ex: `FUR-BO-10001798`) | nom, catégorie, sous-catégorie |
+| [`dim_location`](dbt/models/warehouse/dim_location.sql) | `location_key` (int) | — (pas de clé naturelle dans la source) | ville, état, code postal, région, pays |
+| [`dim_ship_mode`](dbt/models/warehouse/dim_ship_mode.sql) | `ship_mode_key` (int) | `ship_mode` | mode d'expédition |
+| [`dim_date`](dbt/models/warehouse/dim_date.sql) | `date_key` (int, format `YYYYMMDD`) | `date_day` | calendrier complet (année, trimestre, mois, semaine ISO) |
+
+`dim_date` joue un rôle de **dimension à rôles multiples** (role-playing dimension) : `fact_sales` la référence deux fois (`order_date_key` et `ship_date_key`) pour la date de commande et la date de livraison.
 
 Chaque FK de `fact_sales` est couverte par un test dbt `relationships` (intégrité référentielle vérifiée à chaque `dbt build`).
+
+> Note performance : à ce volume (9 800 lignes), le gain de vitesse des clés entières est négligeable — DuckDB traite les deux en millisecondes. L'intérêt ici est la conformité aux bonnes pratiques de modélisation dimensionnelle (Kimball), qui paient à plus grande échelle.
 
 **Pour explorer interactivement** : dbt génère aussi un graphe de dépendances (lineage) entre tous les modèles :
 ```bash
