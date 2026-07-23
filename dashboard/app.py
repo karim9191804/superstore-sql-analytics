@@ -1,4 +1,6 @@
+import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import duckdb
@@ -12,13 +14,26 @@ DB_PATH = DBT_DIR / "superstore.duckdb"
 st.set_page_config(page_title="Superstore Sales Analytics", layout="wide", page_icon="📊")
 
 
+def _resolve_dbt_executable() -> str:
+    """Find the dbt entrypoint even when the venv's bin/Scripts dir isn't on PATH."""
+    found = shutil.which("dbt")
+    if found:
+        return found
+    exe_dir = Path(sys.executable).parent
+    for candidate in (exe_dir / "dbt", exe_dir / "dbt.exe", exe_dir / "Scripts" / "dbt.exe"):
+        if candidate.exists():
+            return str(candidate)
+    return "dbt"
+
+
 def ensure_database_built():
     """Build the DuckDB warehouse via dbt on first run (e.g. fresh clone or cloud deploy)."""
     if DB_PATH.exists():
         return
     with st.spinner("Construction de l'entrepôt de données (dbt build)…"):
         result = subprocess.run(
-            ["dbt", "build", "--profiles-dir", str(DBT_DIR), "--project-dir", str(DBT_DIR)],
+            [_resolve_dbt_executable(), "build", "--profiles-dir", ".", "--project-dir", "."],
+            cwd=str(DBT_DIR),
             capture_output=True,
             text=True,
         )
@@ -27,11 +42,11 @@ def ensure_database_built():
             st.stop()
 
 
-ensure_database_built()
-
-
 @st.cache_resource
 def get_connection():
+    # @st.cache_resource guarantees this runs exactly once per server process
+    # (internally lock-protected), so the dbt build can't race across reruns/sessions.
+    ensure_database_built()
     return duckdb.connect(str(DB_PATH), read_only=True)
 
 
