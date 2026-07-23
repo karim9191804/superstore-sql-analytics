@@ -26,9 +26,27 @@ def _resolve_dbt_executable() -> str:
     return "dbt"
 
 
+def _database_is_up_to_date() -> bool:
+    """Check the DB has the tables the app expects, not just that the file exists.
+
+    Guards against a stale DuckDB file left over from a previous schema
+    version (e.g. before the star-schema models were added) that would
+    otherwise never get rebuilt.
+    """
+    if not DB_PATH.exists():
+        return False
+    try:
+        con = duckdb.connect(str(DB_PATH), read_only=True)
+        tables = {row[0] for row in con.execute("show tables").fetchall()}
+        con.close()
+        return {"fact_sales", "dim_customer", "dim_product", "dim_location"} <= tables
+    except duckdb.Error:
+        return False
+
+
 def ensure_database_built():
     """Build the DuckDB warehouse via dbt on first run (e.g. fresh clone or cloud deploy)."""
-    if DB_PATH.exists():
+    if _database_is_up_to_date():
         return
     with st.spinner("Construction de l'entrepôt de données (dbt build)…"):
         result = subprocess.run(
