@@ -1,11 +1,13 @@
 with agg as (
     select
-        region,
-        category,
-        sum(sales) as total_sales,
-        count(distinct order_id) as total_orders,
-        count(distinct customer_id) as total_customers
-    from {{ ref('stg_superstore') }}
+        l.region,
+        p.category,
+        sum(f.sales) as total_sales,
+        count(distinct f.order_id) as total_orders,
+        count(distinct f.customer_id) as total_customers
+    from {{ ref('fact_sales') }} f
+    join {{ ref('dim_location') }} l on f.location_id = l.location_id
+    join {{ ref('dim_product') }} p on f.product_id = p.product_id
     group by 1, 2
 )
 

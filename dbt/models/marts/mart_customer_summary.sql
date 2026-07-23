@@ -1,12 +1,13 @@
 with orders as (
     select
-        customer_id,
-        customer_name,
-        segment,
-        order_id,
-        order_date,
-        sales
-    from {{ ref('stg_superstore') }}
+        f.customer_id,
+        c.customer_name,
+        c.segment,
+        f.order_id,
+        f.order_date,
+        f.sales
+    from {{ ref('fact_sales') }} f
+    join {{ ref('dim_customer') }} c on f.customer_id = c.customer_id
 ),
 
 customer_orders as (

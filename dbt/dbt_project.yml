@@ -19,5 +19,7 @@ models:
   superstore_analytics:
     staging:
       +materialized: table
+    warehouse:
+      +materialized: table
     marts:
       +materialized: table

@@ -1,0 +1,95 @@
+version: 2
+
+models:
+  - name: dim_customer
+    description: "Dimension client (une ligne par customer_id)."
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_product
+    description: "Dimension produit (une ligne par product_id)."
+    columns:
+      - name: product_id
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_location
+    description: "Dimension géographique, clé de substitution générée (pas de clé naturelle dans la source)."
+    columns:
+      - name: location_id
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_ship_mode
+    description: "Dimension mode d'expédition."
+    columns:
+      - name: ship_mode
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_date
+    description: "Dimension calendaire, une ligne par jour couvrant la période des commandes/livraisons."
+    columns:
+      - name: date_day
+        tests:
+          - unique
+          - not_null
+
+  - name: fact_sales
+    description: "Table de faits : une ligne par ligne de commande (grain = row_id), avec les clés étrangères vers chaque dimension."
+    columns:
+      - name: row_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customer')
+                field: customer_id
+      - name: product_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: product_id
+      - name: location_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_location')
+                field: location_id
+      - name: ship_mode
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_ship_mode')
+                field: ship_mode
+      - name: order_date
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+      - name: ship_date
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+      - name: sales
+        tests:
+          - not_null

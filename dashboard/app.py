@@ -54,13 +54,13 @@ def get_connection():
 def load_filter_bounds():
     con = get_connection()
     bounds = con.execute(
-        "select min(order_date), max(order_date) from stg_superstore"
+        "select min(order_date), max(order_date) from fact_sales"
     ).fetchone()
     regions = [r[0] for r in con.execute(
-        "select distinct region from stg_superstore order by 1"
+        "select distinct region from dim_location order by 1"
     ).fetchall()]
     categories = [c[0] for c in con.execute(
-        "select distinct category from stg_superstore order by 1"
+        "select distinct category from dim_product order by 1"
     ).fetchall()]
     return bounds[0], bounds[1], regions, categories
 
@@ -68,10 +68,16 @@ def load_filter_bounds():
 @st.cache_data
 def query_filtered(start_date, end_date, regions, categories):
     con = get_connection()
+    # fact_sales joined to its dimensions via FK -> PK, star-schema style
+    base_from = """
+        from fact_sales f
+        join dim_location l on f.location_id = l.location_id
+        join dim_product p on f.product_id = p.product_id
+    """
     where = """
-        where order_date between ? and ?
-        and region in ({})
-        and category in ({})
+        where f.order_date between ? and ?
+        and l.region in ({})
+        and p.category in ({})
     """.format(
         ",".join(["?"] * len(regions)),
         ",".join(["?"] * len(categories)),
@@ -81,11 +87,11 @@ def query_filtered(start_date, end_date, regions, categories):
     kpis = con.execute(
         f"""
         select
-            sum(sales) as total_sales,
-            count(distinct order_id) as total_orders,
-            count(distinct customer_id) as total_customers,
-            sum(sales) / nullif(count(distinct order_id), 0) as avg_order_value
-        from stg_superstore
+            sum(f.sales) as total_sales,
+            count(distinct f.order_id) as total_orders,
+            count(distinct f.customer_id) as total_customers,
+            sum(f.sales) / nullif(count(distinct f.order_id), 0) as avg_order_value
+        {base_from}
         {where}
         """,
         params,
@@ -94,8 +100,8 @@ def query_filtered(start_date, end_date, regions, categories):
     monthly = con.execute(
         f"""
         with monthly as (
-            select date_trunc('month', order_date)::date as month, sum(sales) as total_sales
-            from stg_superstore
+            select date_trunc('month', f.order_date)::date as month, sum(f.sales) as total_sales
+            {base_from}
             {where}
             group by 1
         )
@@ -111,8 +117,8 @@ def query_filtered(start_date, end_date, regions, categories):
 
     region_cat = con.execute(
         f"""
-        select region, category, sum(sales) as total_sales
-        from stg_superstore
+        select l.region, p.category, sum(f.sales) as total_sales
+        {base_from}
         {where}
         group by 1, 2
         order by 1, 2
@@ -122,8 +128,8 @@ def query_filtered(start_date, end_date, regions, categories):
 
     top_products = con.execute(
         f"""
-        select product_name, category, sum(sales) as total_sales
-        from stg_superstore
+        select p.product_name, p.category, sum(f.sales) as total_sales
+        {base_from}
         {where}
         group by 1, 2
         order by total_sales desc

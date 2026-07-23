@@ -1,9 +1,10 @@
 with monthly as (
     select
-        date_trunc('month', order_date)::date as month,
-        sum(sales) as total_sales,
-        count(distinct order_id) as total_orders
-    from {{ ref('stg_superstore') }}
+        make_date(d.year, d.month, 1) as month,
+        sum(f.sales) as total_sales,
+        count(distinct f.order_id) as total_orders
+    from {{ ref('fact_sales') }} f
+    join {{ ref('dim_date') }} d on f.order_date = d.date_day
     group by 1
 )
 

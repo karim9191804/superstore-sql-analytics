@@ -1,12 +1,13 @@
 with product_sales as (
     select
-        category,
-        sub_category,
-        product_id,
-        product_name,
-        sum(sales) as total_sales,
-        count(distinct order_id) as total_orders
-    from {{ ref('stg_superstore') }}
+        p.category,
+        p.sub_category,
+        p.product_id,
+        p.product_name,
+        sum(f.sales) as total_sales,
+        count(distinct f.order_id) as total_orders
+    from {{ ref('fact_sales') }} f
+    join {{ ref('dim_product') }} p on f.product_id = p.product_id
     group by 1, 2, 3, 4
 )
 

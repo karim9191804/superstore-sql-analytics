@@ -1,10 +1,12 @@
 with shipping as (
     select
-        ship_mode,
-        region,
-        date_diff('day', order_date, ship_date) as ship_delay_days,
-        sales
-    from {{ ref('stg_superstore') }}
+        sm.ship_mode,
+        l.region,
+        date_diff('day', f.order_date, f.ship_date) as ship_delay_days,
+        f.sales
+    from {{ ref('fact_sales') }} f
+    join {{ ref('dim_location') }} l on f.location_id = l.location_id
+    join {{ ref('dim_ship_mode') }} sm on f.ship_mode = sm.ship_mode
 )
 
 select
